@@ -1,0 +1,247 @@
+---
+title: "DS 4420 Finale"
+author: "Siraj"
+date: "2025-04-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(readr)
+library(dplyr)
+library(caret)
+library(ggplot2)
+```
+
+```{r warning=FALSE, show_col_types = FALSE}
+
+
+# Load data
+df <- read_csv("data.csv")
+
+# Convert to datetime
+df <- df %>%
+  mutate(`Date/Time` = ymd_hms(`Date/Time`))
+
+# Fill NAs with 0
+df <- df %>%
+  mutate(across(where(is.numeric), ~replace_na(., 0)))
+
+# Create Has_Precip column
+df <- df %>%
+  mutate(Has_Precip = as.integer(`Total Precip (in)` > 0))
+
+# Extract time features
+df <- df %>%
+  mutate(
+    Hour = hour(`Date/Time`),
+    Month = month(`Date/Time`),
+    Day_of_Year = yday(`Date/Time`),
+    Day_of_Week = wday(`Date/Time`, week_start = 1) - 1 # match Python's 0 = Monday
+  )
+
+# Handle wind direction
+wind_dir_median <- median(df$`Wind Direction (°)`, na.rm = TRUE)
+df$`Wind Direction (°)`[is.na(df$`Wind Direction (°)`)] <- wind_dir_median
+
+# Convert wind direction to sin and cos
+df <- df %>%
+  mutate(
+    Wind_Sin = sin(pi * `Wind Direction (°)` / 180),
+    Wind_Cos = cos(pi * `Wind Direction (°)` / 180)
+  )
+
+# Map pressure trend codes
+df <- df %>%
+  mutate(Pressure_Trend_Num = recode(`Pressure Trend Code`,
+                                     "F" = -1L,
+                                     "S" = 0L,
+                                     "R" = 1L,
+                                     .default = 0L))
+
+# View final column names
+colnames(df)
+```
+``` {r}
+# Define input and output features
+input_features <- c("Wind Speed (mph)", "Pressure Trend Code", "Humidity (%)", "UV Index", "Pressure (inHg)", "Hour")
+output_feature <- "Has_Precip"
+
+# Split data by precipitation
+has_precip <- df %>% filter(Has_Precip == 1)
+no_precip <- df %>% filter(Has_Precip == 0)
+
+# Sample 500 rows from each group
+set.seed(42)
+has_precip_sample <- sample_n(has_precip, 500)
+no_precip_sample <- sample_n(no_precip, 500)
+
+# Combine and shuffle
+balanced_df <- bind_rows(has_precip_sample, no_precip_sample) %>%
+  slice_sample(prop = 1, replace = FALSE) %>%
+  mutate(row_id = row_number()) %>% 
+  arrange(row_id) %>%
+  select(-row_id)
+
+# Create input and output feature dataframes
+input_features_df <- balanced_df %>% select(all_of(input_features))
+output_feature_df <- balanced_df %>% select(all_of(output_feature))
+```
+
+``` {r}
+# Select only numeric columns
+numeric_columns <- balanced_df %>%
+  select(where(is.numeric))
+
+# Compute correlation matrix
+correlation_matrix <- cor(numeric_columns, use = "complete.obs")
+
+# Extract correlation with Has_Precip and sort
+correlation_with_precip <- sort(correlation_matrix[,"Has_Precip"], decreasing = TRUE)
+
+# Print results
+cat("Correlation of numerical columns with Has_Precip:\n")
+print(correlation_with_precip)
+```
+
+```{r}
+# Convert input features to matrix
+input_features_matrix <- as.matrix(input_features_df)
+
+# Convert output feature to a flattened vector
+output_feature_vector <- as.vector(unlist(output_feature_df))
+```
+
+```{r}
+# Apply Min-Max scaling
+scaler <- preProcess(input_features_matrix, method = "range")
+X_scale <- predict(scaler, input_features_matrix)
+
+# Add bias term (column of 1s)
+X_scale <- cbind(X_scale, Bias = 1)
+phi <- X_scale
+
+
+```
+
+```{r}
+
+# Set seed for reproducibility
+set.seed(42)
+
+# Create training and test indices (80/20 split)
+train_indices <- createDataPartition(y = output_feature_vector, p = 0.8, list = FALSE)
+
+# Split data
+Phi_train <- phi[train_indices, ]
+Phi_test  <- phi[-train_indices, ]
+
+y_train <- output_feature_vector[train_indices]
+y_test  <- output_feature_vector[-train_indices]
+```
+
+```{r}
+# Set learning rate
+eta <- 0.01
+
+# Randomly initialize weights
+set.seed(42)
+W1 <- matrix(rnorm(ncol(Phi_train) * 4), nrow = ncol(Phi_train), ncol = 4)
+W2 <- matrix(rnorm(4 * 1), nrow = 4, ncol = 1)
+
+# Check shape of Phi_train
+dim(Phi_train)
+```
+
+```{r}
+# Define sigmoid function
+sigmoid <- function(z) {
+  1 / (1 + exp(-z))
+}
+
+# Forward function: x is a column vector
+f <- function(x) {
+  h <- pmax(0, t(W1) %*% x)  # ReLU
+  sigmoid(t(W2) %*% h)
+}
+
+# Training parameters
+errors <- c()
+epochs <- 2500
+n <- nrow(Phi_train)
+
+for (epoch in 1:epochs) {
+  dW2 <- matrix(0, nrow = nrow(W2), ncol = ncol(W2))
+  
+  # --- dW2 loop ---
+  for (i in 1:n) {
+    x <- matrix(Phi_train[i, ], ncol = 1)  # column vector
+    h <- pmax(0, t(W1) %*% x)
+    f_x <- sigmoid(t(W2) %*% h)
+    dW2 <- dW2 + (1 / n) * (as.numeric(f_x) - y_train[i]) * h
+  }
+  W2 <- W2 - eta * dW2
+  
+  # --- dW1 loop ---
+  dW1 <- matrix(0, nrow = nrow(W1), ncol = ncol(W1))
+  
+  for (i in 1:n) {
+    x <- matrix(Phi_train[i, ], ncol = 1)
+    h_input <- t(W1) %*% x
+    relu_derivative <- (h_input > 0) * 1  # ReLU derivative
+    f_x <- sigmoid(t(W2) %*% pmax(0, h_input))
+    gradient <- (as.numeric(f_x) - y_train[i]) * W2 * relu_derivative
+    dW1 <- dW1 + (1 / n) * (x %*% t(gradient))
+  }
+  W1 <- W1 - eta * dW1
+  
+  # Calculate mean squared error for this epoch
+  predictions <- apply(Phi_train, 1, function(row) {
+    f(matrix(row, ncol = 1)) |> as.numeric()
+  })
+  e <- mean((predictions - y_train)^2)
+  errors <- c(errors, e)
+}
+```
+
+```{r}
+library(ggplot2)
+
+# Create a data frame for plotting
+error_df <- data.frame(
+  Epoch = 1:epochs,
+  Error = errors
+)
+
+# Plot the error over time
+ggplot(error_df, aes(x = Epoch, y = Error)) +
+  geom_line(color = "steelblue") +
+  labs(
+    title = "Error over Time",
+    x = "Epochs",
+    y = "Error"
+  ) +
+  theme_minimal()
+```
+```{r}
+# Get predictions for the test set
+predictions <- apply(Phi_test, 1, function(row) {
+  f(matrix(row, ncol = 1)) |> as.numeric()
+})
+
+# Round predictions to 0 or 1
+predicted_labels <- round(predictions)
+
+# Calculate accuracy
+accuracy <- mean(predicted_labels == y_test)
+cat(sprintf("Accuracy: %.2f%%\n", accuracy * 100))
+
+# Count number of predicted positives
+cat(sprintf("Number of predicted positives (1s): %d\n", sum(predicted_labels == 1)))
+```
+
+
+
+
