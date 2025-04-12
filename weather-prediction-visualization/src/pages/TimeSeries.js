@@ -109,7 +109,7 @@ export const TimeSeries = () => {
       {summaryBlock(armaSummary)}
 
       <p>
-        You can also view the full interactive HTML report{' '}
+        You can also view the source code{' '}
         <a
           href="/time_series/time_series.html"
           target="_blank"
@@ -118,7 +118,6 @@ export const TimeSeries = () => {
         >
           here
         </a>
-        .
       </p>
 
       <nav>

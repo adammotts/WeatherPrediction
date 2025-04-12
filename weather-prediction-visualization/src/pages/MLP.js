@@ -35,7 +35,6 @@ export const MLP = () => (
       >
         here
       </a>
-      .
     </p>
 
     <nav>
