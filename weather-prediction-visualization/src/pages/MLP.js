@@ -2,7 +2,12 @@ export const MLP = () => (
   <div>
     <h1>MLP</h1>
     <p>
-      The graph below shows how error changed over training epochs for the multilayer perceptron model.
+      The weather dataset that we collected contained a myriad of attributes, ranging from temperature to UV index. We selected a subset of these,
+      namely Wind Speed (mph), Pressure Trend Code, Humidity (%), UV Index, Pressure (inHg), Hour, and used them to train a multilayer perception
+      model to perform binary classification on whether or not it would rain on a given day.
+    </p>
+    <p>
+      The graph below shows how error changed over 2500 training epochs.
     </p>
     <img
       src="/mlp/error_over_time.png"

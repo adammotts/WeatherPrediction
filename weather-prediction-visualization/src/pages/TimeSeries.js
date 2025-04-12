@@ -1,7 +1,14 @@
 export const TimeSeries = () => (
   <div>
-    <h1>Time Series Analysis</h1>
-    <p>Visualizations related to monthly precipitation forecasting using AR, MA, and ARMA models:</p>
+    <h1>Time Series</h1>
+    <p>
+      We originally tried to perform time series analysis for individual days, but our dataset did not
+      contain enough rainy days (about 500 entries out of 41000, surprisingly), so our secondary approach
+      was to group by month, and predict the total amount of precipitation by month. 
+    </p>
+    <p>
+      We used AR, MA, and ARMA models, whose predictions are visualized below
+    </p>
 
     <img src="/time_series/PrecipitationOverTime.png" alt="Precipitation Over Time" />
     <img src="/time_series/MonthlyPrecipitationDecomposition.png" alt="Monthly Decomposition" />
