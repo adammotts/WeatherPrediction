@@ -21,11 +21,26 @@ export const TimeSeries = () => {
         overflowX: 'auto',
         whiteSpace: 'pre-wrap',
         marginTop: '1rem',
+        marginBottom: '2rem',
       }}
     >
       {text || 'Loading...'}
     </pre>
   );
+
+  const iframeStyle = {
+    width: '100%',
+    border: '2px solid white',
+    borderRadius: '8px',
+    backgroundColor: 'white',
+    marginBottom: '2rem'
+  };
+
+  const iframeHeights = {
+    default: '500px',
+    decomposition: '816px',
+    small: '416px'
+  };
 
   return (
     <div>
@@ -41,23 +56,56 @@ export const TimeSeries = () => {
         We used AR, MA, and ARMA models, whose predictions are visualized and summarized below.
       </p>
 
-      <img src="/time_series/PrecipitationOverTime.png" alt="Precipitation Over Time" />
-      <img src="/time_series/MonthlyPrecipitationDecomposition.png" alt="Monthly Decomposition" />
+      <h2>Monthly Precipitation</h2>
+      <iframe
+        src="/time_series/PrecipitationOverTime.html"
+        title="Precipitation Over Time"
+        style={{ ...iframeStyle, height: iframeHeights.default }}
+      />
+
+      <h2>Decomposition</h2>
+      <iframe
+        src="/time_series/MonthlyPrecipitationDecomposition.html"
+        title="Decomposition"
+        style={{ ...iframeStyle, height: iframeHeights.decomposition }}
+      />
 
       <h3>Autocorrelation</h3>
-      <img src="/time_series/MonthlyPrecipitationPACF.png" alt="PACF" />
-      <img src="/time_series/MonthPrecipitationACF.png" alt="ACF" />
+      <iframe
+        src="/time_series/MonthPrecipitationACF.html"
+        title="ACF Plot"
+        style={{ ...iframeStyle, height: iframeHeights.small }}
+      />
+
+      <h3>Partial Autocorrelation</h3>
+      <iframe
+        src="/time_series/MonthlyPrecipitationPACF.html"
+        title="PACF Plot"
+        style={{ ...iframeStyle, height: iframeHeights.small }}
+      />
 
       <h2>AR Model</h2>
-      <img src="/time_series/ARvsActual.png" alt="AR vs Actual" />
+      <iframe
+        src="/time_series/ARvsActual.html"
+        title="AR vs Actual"
+        style={{ ...iframeStyle, height: iframeHeights.default }}
+      />
       {summaryBlock(arSummary)}
 
       <h2>MA Model</h2>
-      <img src="/time_series/MAvsActual.png" alt="MA vs Actual" />
+      <iframe
+        src="/time_series/MAvsActual.html"
+        title="MA vs Actual"
+        style={{ ...iframeStyle, height: iframeHeights.default }}
+      />
       {summaryBlock(maSummary)}
 
       <h2>ARMA Model</h2>
-      <img src="/time_series/ARMAvsActual.png" alt="ARMA vs Actual" />
+      <iframe
+        src="/time_series/ARMAvsActual.html"
+        title="ARMA vs Actual"
+        style={{ ...iframeStyle, height: iframeHeights.default }}
+      />
       {summaryBlock(armaSummary)}
 
       <p>

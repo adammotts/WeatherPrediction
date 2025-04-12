@@ -573,6 +573,22 @@ error_plot &lt;- ggplot(error_df, aes(x = Epoch, y = Error)) +
   theme_minimal()
 
 ggsave(&quot;./weather-prediction-visualization/public/mlp/error_over_time.png&quot;, plot = error_plot, width = 8, height = 5, dpi = 300)</code></pre>
+<pre class="r"><code>error_plot &lt;- plot_ly(
+  data = error_df,
+  x = ~Epoch,
+  y = ~Error,
+  type = &#39;scatter&#39;,
+  mode = &#39;lines&#39;,
+  line = list(color = &#39;steelblue&#39;)
+) %&gt;%
+  layout(
+    title = &quot;Error over Time&quot;,
+    xaxis = list(title = &quot;Epochs&quot;),
+    yaxis = list(title = &quot;Error&quot;),
+    template = &quot;plotly_white&quot;
+  )
+
+saveWidget(error_plot, file = &quot;error_over_time.html&quot;, selfcontained = TRUE)</code></pre>
 <pre class="r"><code># Get predictions for the test set
 predictions &lt;- apply(Phi_test, 1, function(row) {
   f(matrix(row, ncol = 1)) |&gt; as.numeric()

@@ -13,6 +13,8 @@ library(readr)
 library(dplyr)
 library(caret)
 library(ggplot2)
+library(plotly)
+library(htmlwidgets)
 ```
 
 ```{r warning=FALSE, show_col_types = FALSE}
@@ -226,6 +228,25 @@ error_plot <- ggplot(error_df, aes(x = Epoch, y = Error)) +
   theme_minimal()
 
 ggsave("./weather-prediction-visualization/public/mlp/error_over_time.png", plot = error_plot, width = 8, height = 5, dpi = 300)
+```
+
+```{r}
+error_plot <- plot_ly(
+  data = error_df,
+  x = ~Epoch,
+  y = ~Error,
+  type = 'scatter',
+  mode = 'lines',
+  line = list(color = 'steelblue')
+) %>%
+  layout(
+    title = "Error over Time",
+    xaxis = list(title = "Epochs"),
+    yaxis = list(title = "Error"),
+    template = "plotly_white"
+  )
+
+saveWidget(error_plot, file = "error_over_time.html", selfcontained = TRUE)
 ```
 
 ```{r}

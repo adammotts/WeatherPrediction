@@ -3,27 +3,30 @@ export const MLP = () => (
     <h1>MLP</h1>
     <p>
       The weather dataset that we collected contained a myriad of attributes, ranging from temperature to UV index. We selected a subset of these,
-      namely Wind Speed (mph), Pressure Trend Code, Humidity (%), UV Index, Pressure (inHg), Hour, and used them to train a multilayer perception
+      namely Wind Speed (mph), Pressure Trend Code, Humidity (%), UV Index, Pressure (inHg), Hour, and used them to train a multilayer perceptron
       model to perform binary classification on whether or not it would rain on a given day.
     </p>
+
     <p>
-      The graph below shows how error changed over 2500 training epochs.
+      The interactive graph below shows how error changed over 2500 training epochs.
     </p>
-    <img
-      src="/mlp/error_over_time.png"
-      alt="MLP Error Over Time"
+
+    <iframe
+      src="/mlp/error_over_time.html"
+      title="MLP Error Over Time"
       style={{
-          backgroundColor: 'white',
-          padding: '1rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          display: 'block',
-          marginBottom: '1rem',
+        width: '100%',
+        height: '500px',
+        border: '2px solid white',
+        borderRadius: '8px',
+        backgroundColor: 'white',
+        marginBottom: '2rem',
+        padding: '1rem',
       }}
     />
 
     <p>
-      You can also view the source code {' '}
+      You can also view the source code{' '}
       <a
         href="/mlp/mlp_prediction.html"
         target="_blank"
@@ -32,6 +35,7 @@ export const MLP = () => (
       >
         here
       </a>
+      .
     </p>
 
     <nav>
