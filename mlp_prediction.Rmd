@@ -216,7 +216,7 @@ error_df <- data.frame(
 )
 
 # Plot the error over time
-ggplot(error_df, aes(x = Epoch, y = Error)) +
+error_plot <- ggplot(error_df, aes(x = Epoch, y = Error)) +
   geom_line(color = "steelblue") +
   labs(
     title = "Error over Time",
@@ -224,7 +224,10 @@ ggplot(error_df, aes(x = Epoch, y = Error)) +
     y = "Error"
   ) +
   theme_minimal()
+
+ggsave("./weather-prediction-visualization/public/mlp/error_over_time.png", plot = error_plot, width = 8, height = 5, dpi = 300)
 ```
+
 ```{r}
 # Get predictions for the test set
 predictions <- apply(Phi_test, 1, function(row) {
