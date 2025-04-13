@@ -55,7 +55,6 @@ df <- df %>%
     Wind_Cos = cos(pi * `Wind Direction (°)` / 180)
   )
 
-# Map pressure trend codes
 df <- df %>%
   mutate(Pressure_Trend_Num = recode(`Pressure Trend Code`,
                                      "F" = -1L,
@@ -63,11 +62,9 @@ df <- df %>%
                                      "R" = 1L,
                                      .default = 0L))
 
-# View final column names
 colnames(df)
 ```
 ``` {r}
-# Define input and output features
 input_features <- c("Wind Speed (mph)", "Pressure Trend Code", "Humidity (%)", "UV Index", "Pressure (inHg)", "Hour")
 output_feature <- "Has_Precip"
 
@@ -211,7 +208,6 @@ for (epoch in 1:epochs) {
 ```{r}
 library(ggplot2)
 
-# Create a data frame for plotting
 error_df <- data.frame(
   Epoch = 1:epochs,
   Error = errors
@@ -255,14 +251,11 @@ predictions <- apply(Phi_test, 1, function(row) {
   f(matrix(row, ncol = 1)) |> as.numeric()
 })
 
-# Round predictions to 0 or 1
 predicted_labels <- round(predictions)
 
-# Calculate accuracy
 accuracy <- mean(predicted_labels == y_test)
 cat(sprintf("Accuracy: %.2f%%\n", accuracy * 100))
 
-# Count number of predicted positives
 cat(sprintf("Number of predicted positives (1s): %d\n", sum(predicted_labels == 1)))
 ```
 
